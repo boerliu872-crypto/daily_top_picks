@@ -1,0 +1,64 @@
+﻿name: Daily Top Picks
+
+on:
+  schedule:
+    # UTC 09:30 = 北京时间 17:30,周一到周五
+    - cron: "30 9 * * 1-5"
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create dirs
+        run: mkdir -p data logs
+
+      - name: Stage 1 - Scan
+        env:
+          TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+        run: python pipeline/stage1_scan.py
+
+      - name: Stage 2 - Factor
+        env:
+          TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+        run: python pipeline/stage2_factor.py
+
+      - name: Stage 3 - Agents
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python pipeline/stage3_agents.py
+
+      - name: Stage 4 - PM
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python pipeline/stage4_pm.py
+
+      - name: Stage 5 - Push
+        env:
+          SERVERCHAN3_SENDKEY: ${{ secrets.SERVERCHAN3_SENDKEY }}
+        run: python pipeline/stage5_push.py
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-${{ github.run_number }}
+          path: |
+            data/*.json
+            logs/*.log
+          retention-days: 30
