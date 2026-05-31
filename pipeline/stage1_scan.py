@@ -371,11 +371,9 @@ def main():
     try:
         candidates = run_scan()
         
+        # 关键:无论如何都生成文件(即使空),保证后续步骤不崩溃
         if candidates is None:
-            logger.info("ℹ️ 今日不输出候选")
-            sys.exit(0)
-        
-        if not candidates:
+            logger.info("今日无数据,保存空候选池")
             save_candidates([])
             sys.exit(0)
         

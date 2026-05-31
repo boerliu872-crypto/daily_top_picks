@@ -87,7 +87,8 @@ def run():
         data = json.load(f)
     candidates = data.get("candidates", [])
     if not candidates:
-        return None
+        logger.info("候选池为空,生成空Agent结果")
+        return {"market_context": {"emotion_stage": "无数据"}, "emotion_cycle": {}, "stocks": []}
     logger.info(f"待分析 {len(candidates)} 只")
 
     # 1. 大盘情绪(跑1次)

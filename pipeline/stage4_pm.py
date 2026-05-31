@@ -43,6 +43,15 @@ def run():
     market_ctx = agent_data.get("market_context", {})
     stocks = agent_data.get("stocks", [])
     logger.info(f"待裁决 {len(stocks)} 只")
+    if not stocks:
+        logger.info("无候选,生成空推荐结果")
+        result = {
+            "generated_at": datetime.now().isoformat(),
+            "market_context": market_ctx,
+            "main_picks": [], "backup_picks": [], "all_decisions": [],
+            "summary": {"total": 0, "main": 0, "backup": 0, "observe": 0, "pass": 0},
+        }
+        return result
 
     decisions = []
     for sr in stocks:
